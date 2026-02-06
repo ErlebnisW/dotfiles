@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "plugins": {
+    "oh-my-claudecode@omc": [
+      {
+        "scope": "user",
+        "installPath": "/Users/richard/.claude/plugins/cache/omc/oh-my-claudecode/3.8.17",
+        "version": "3.8.17",
+        "installedAt": "2026-02-01T06:56:49.305Z",
+        "lastUpdated": "2026-02-01T06:56:49.305Z",
+        "gitCommitSha": "89d57ea278063eacf2c4cb45a60a1214c1e86707"
+      }
+    ],
+    "document-skills@anthropic-agent-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/richard/.claude/plugins/cache/anthropic-agent-skills/document-skills/69c0b1a06741",
+        "version": "69c0b1a06741",
+        "installedAt": "2026-02-01T13:13:11.487Z",
+        "lastUpdated": "2026-02-01T13:13:11.487Z",
+        "gitCommitSha": "69c0b1a0674149f27b61b2635f935524b6add202"
+      }
+    ],
+    "example-skills@anthropic-agent-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/richard/.claude/plugins/cache/anthropic-agent-skills/example-skills/69c0b1a06741",
+        "version": "69c0b1a06741",
+        "installedAt": "2026-02-01T13:13:21.581Z",
+        "lastUpdated": "2026-02-01T13:13:21.581Z",
+        "gitCommitSha": "69c0b1a0674149f27b61b2635f935524b6add202"
+      }
+    ],
+    "superpowers@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/richard/.claude/plugins/cache/superpowers-marketplace/superpowers/4.1.1",
+        "version": "4.1.1",
+        "installedAt": "2026-02-02T05:02:59.194Z",
+        "lastUpdated": "2026-02-02T05:02:59.194Z",
+        "gitCommitSha": "06b92f36820f38175b2ed6ff3f8df45157d54731"
+      }
+    ],
+    "claude-mem@thedotmack": [
+      {
+        "scope": "user",
+        "installPath": "/Users/richard/.claude/plugins/cache/thedotmack/claude-mem/9.0.12",
+        "version": "9.0.12",
+        "installedAt": "2026-02-02T18:37:21.238Z",
+        "lastUpdated": "2026-02-02T18:37:21.238Z",
+        "gitCommitSha": "1341e93fcab15b9caf48bc947d8521b4a97515d8"
+      }
+    ]
+  }
+}

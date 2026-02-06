@@ -1,0 +1,153 @@
+//@version=5
+strategy("Breakout Template", overlay=true,
+         initial_capital=10000,
+         default_qty_type=strategy.percent_of_equity,
+         default_qty_value=10,
+         commission_type=strategy.commission.percent,
+         commission_value=0.1,
+         slippage=2)
+
+// ═══════════════════════════════════════════════════════════════
+// INPUTS - Breakout Parameters
+// ═══════════════════════════════════════════════════════════════
+// Breakout Level
+lookbackPeriod = input.int(20, "Breakout Lookback Period", minval=10, maxval=100, group="Breakout")
+breakoutType = input.string("High/Low", "Breakout Type", options=["High/Low", "Close", "Donchian"], group="Breakout")
+
+// Volume Confirmation
+useVolumeConfirm = input.bool(true, "Require Volume Surge", group="Volume")
+volumeMultiplier = input.float(1.5, "Volume Surge Multiplier", minval=1.0, maxval=3.0, step=0.1, group="Volume")
+
+// Momentum Confirmation
+useMomentumConfirm = input.bool(true, "Require MACD Confirmation", group="Momentum")
+
+// Consolidation Filter (avoid false breakouts)
+useConsolidationFilter = input.bool(true, "Only Trade After Consolidation", group="Filters")
+consolidationPeriod = input.int(10, "Consolidation Lookback", minval=5, maxval=30, group="Filters")
+consolidationThreshold = input.float(1.5, "Max ATR for Consolidation", minval=0.5, maxval=3.0, step=0.5, group="Filters")
+
+// Trend Filter
+useTrendFilter = input.bool(true, "Only Breakouts in Trend Direction", group="Filters")
+trendMA = input.int(50, "Trend MA Period", minval=20, maxval=200, group="Filters")
+
+// Risk Management
+riskPercent = input.float(2.0, "Risk Per Trade (%)", minval=0.5, maxval=5, step=0.5, group="Risk Management")
+stopLossPercent = input.float(2.0, "Stop Loss %", minval=1, maxval=10, step=0.5, group="Risk Management")
+takeProfitRR = input.float(3.0, "Risk:Reward Ratio", minval=1.5, maxval=5, step=0.5, group="Risk Management")
+useTrailingStop = input.bool(true, "Use Trailing Stop", group="Risk Management")
+
+// ═══════════════════════════════════════════════════════════════
+// INDICATOR CALCULATIONS
+// ═══════════════════════════════════════════════════════════════
+// Breakout Levels
+var float breakoutHigh = na
+var float breakoutLow = na
+
+if breakoutType == "High/Low"
+    breakoutHigh := ta.highest(high, lookbackPeriod)[1]
+    breakoutLow := ta.lowest(low, lookbackPeriod)[1]
+else if breakoutType == "Close"
+    breakoutHigh := ta.highest(close, lookbackPeriod)[1]
+    breakoutLow := ta.lowest(close, lookbackPeriod)[1]
+else  // Donchian
+    breakoutHigh := ta.highest(high, lookbackPeriod)[1]
+    breakoutLow := ta.lowest(low, lookbackPeriod)[1]
+
+// Volume
+volumeMA = ta.sma(volume, 20)
+volumeSurge = not useVolumeConfirm or volume > volumeMA * volumeMultiplier
+
+// MACD Momentum
+[macdLine, signalLine, _] = ta.macd(close, 12, 26, 9)
+macdBullish = not useMomentumConfirm or macdLine > signalLine
+macdBearish = not useMomentumConfirm or macdLine < signalLine
+
+// Consolidation Detection
+atr = ta.atr(14)
+avgATR = ta.sma(atr, consolidationPeriod)
+isConsolidating = not useConsolidationFilter or atr < avgATR * consolidationThreshold
+
+// Trend Filter
+sma = ta.sma(close, trendMA)
+uptrend = not useTrendFilter or close > sma
+downtrend = not useTrendFilter or close < sma
+
+// ═══════════════════════════════════════════════════════════════
+// ENTRY CONDITIONS
+// ═══════════════════════════════════════════════════════════════
+// Long Breakout: Close above resistance + confirmations
+longBreakout = close > breakoutHigh
+longCondition = longBreakout and volumeSurge and macdBullish and isConsolidating and uptrend
+
+// Short Breakout: Close below support + confirmations
+shortBreakout = close < breakoutLow
+shortCondition = shortBreakout and volumeSurge and macdBearish and isConsolidating and downtrend
+
+// ═══════════════════════════════════════════════════════════════
+// POSITION SIZING
+// ═══════════════════════════════════════════════════════════════
+stopLossDistance = close * (stopLossPercent / 100)
+riskAmount = strategy.equity * (riskPercent / 100)
+positionSize = riskAmount / stopLossDistance
+
+// ═══════════════════════════════════════════════════════════════
+// STRATEGY EXECUTION
+// ═══════════════════════════════════════════════════════════════
+if (longCondition and strategy.position_size == 0)
+    strategy.entry("Long Breakout", strategy.long, qty=positionSize)
+
+if (strategy.position_size > 0)
+    entryPrice = strategy.position_avg_price
+    stopPrice = entryPrice * (1 - stopLossPercent / 100)
+    targetPrice = entryPrice * (1 + (stopLossPercent / 100) * takeProfitRR)
+
+    if (useTrailingStop)
+        trailActivation = (targetPrice - entryPrice) / 2
+        trailOffset = entryPrice * 0.01  // 1% trail
+        strategy.exit("Exit Long", "Long Breakout", stop=stopPrice,
+                     trail_points=trailActivation,
+                     trail_offset=trailOffset)
+    else
+        strategy.exit("Exit Long", "Long Breakout", stop=stopPrice, limit=targetPrice)
+
+if (shortCondition and strategy.position_size == 0)
+    strategy.entry("Short Breakout", strategy.short, qty=positionSize)
+
+if (strategy.position_size < 0)
+    entryPrice = strategy.position_avg_price
+    stopPrice = entryPrice * (1 + stopLossPercent / 100)
+    targetPrice = entryPrice * (1 - (stopLossPercent / 100) * takeProfitRR)
+
+    if (useTrailingStop)
+        trailActivation = (entryPrice - targetPrice) / 2
+        trailOffset = entryPrice * 0.01  // 1% trail
+        strategy.exit("Exit Short", "Short Breakout", stop=stopPrice,
+                     trail_points=trailActivation,
+                     trail_offset=trailOffset)
+    else
+        strategy.exit("Exit Short", "Short Breakout", stop=stopPrice, limit=targetPrice)
+
+// ═══════════════════════════════════════════════════════════════
+// VISUALIZATION
+// ═══════════════════════════════════════════════════════════════
+// Plot breakout levels
+plot(breakoutHigh, "Resistance", color=color.new(color.red, 0), linewidth=2, style=plot.style_stepline)
+plot(breakoutLow, "Support", color=color.new(color.green, 0), linewidth=2, style=plot.style_stepline)
+
+// Fill consolidation zone
+fillHigh = plot(breakoutHigh, display=display.none)
+fillLow = plot(breakoutLow, display=display.none)
+fill(fillHigh, fillLow, color=color.new(color.gray, 90))
+
+// Plot trend MA
+plot(useTrendFilter ? sma : na, "Trend MA", color=color.new(color.blue, 0), linewidth=2)
+
+// Plot breakout signals
+plotshape(longCondition, "Long Breakout", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.normal)
+plotshape(shortCondition, "Short Breakout", shape.triangledown, location.abovebar, color.new(color.red, 0), size=size.normal)
+
+// Plot entry price
+plot(strategy.position_size != 0 ? strategy.position_avg_price : na, "Entry", color=color.new(color.yellow, 0), linewidth=2, style=plot.style_linebr)
+
+// Highlight consolidation zones
+bgcolor(isConsolidating and useConsolidationFilter ? color.new(color.orange, 95) : na, title="Consolidation Zone")

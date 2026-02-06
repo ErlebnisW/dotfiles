@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(npm install)",
+      "Bash(chmod:*)",
+      "Bash(node -e:*)",
+      "Bash(omc stats:*)",
+      "Bash(omc agents:*)",
+      "WebSearch",
+      "mcp__paper-search-mcp__search_arxiv"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7",
+    "exa",
+    "filesystem",
+    "github",
+    "paper-search-mcp"
+  ]
+}

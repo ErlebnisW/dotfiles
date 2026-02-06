@@ -1,0 +1,131 @@
+//@version=5
+strategy("Mean Reversion Template", overlay=true,
+         initial_capital=10000,
+         default_qty_type=strategy.percent_of_equity,
+         default_qty_value=10,
+         commission_type=strategy.commission.percent,
+         commission_value=0.1,
+         slippage=2)
+
+// ═══════════════════════════════════════════════════════════════
+// INPUTS - Mean Reversion Parameters
+// ═══════════════════════════════════════════════════════════════
+// Bollinger Bands Settings
+bbLength = input.int(20, "BB Length", minval=10, maxval=50, group="Bollinger Bands")
+bbMult = input.float(2.0, "BB Std Dev", minval=1.0, maxval=4.0, step=0.5, group="Bollinger Bands")
+
+// RSI Oversold/Overbought
+rsiLength = input.int(14, "RSI Length", minval=5, maxval=30, group="RSI")
+rsiOversold = input.int(30, "RSI Oversold", minval=20, maxval=40, group="RSI")
+rsiOverbought = input.int(70, "RSI Overbought", minval=60, maxval=80, group="RSI")
+
+// Volatility Filter
+useVolatilityFilter = input.bool(true, "Use High Volatility Filter", group="Filters")
+volatilityMultiplier = input.float(1.2, "ATR Multiplier for Entry", minval=1.0, maxval=2.0, step=0.1, group="Filters")
+
+// Market Regime Filter (avoid trending markets)
+useRegimeFilter = input.bool(true, "Avoid Strong Trends (ADX)", group="Filters")
+maxADX = input.int(30, "Max ADX (Range Market)", minval=20, maxval=50, group="Filters")
+
+// Risk Management
+riskPercent = input.float(2.0, "Risk Per Trade (%)", minval=0.5, maxval=5, step=0.5, group="Risk Management")
+stopLossPercent = input.float(3.0, "Stop Loss %", minval=1, maxval=10, step=0.5, group="Risk Management")
+takeProfitMode = input.string("BB_Center", "Take Profit Mode", options=["BB_Center", "Fixed_RR", "Opposite_Band"], group="Risk Management")
+fixedRR = input.float(2.0, "Fixed Risk:Reward", minval=1, maxval=5, step=0.5, group="Risk Management")
+
+// ═══════════════════════════════════════════════════════════════
+// INDICATOR CALCULATIONS
+// ═══════════════════════════════════════════════════════════════
+// Bollinger Bands
+basis = ta.sma(close, bbLength)
+dev = ta.stdev(close, bbLength) * bbMult
+upperBand = basis + dev
+lowerBand = basis - dev
+
+// RSI
+rsi = ta.rsi(close, rsiLength)
+
+// Volatility (ATR)
+atr = ta.atr(14)
+atrMA = ta.sma(atr, 50)
+highVolatility = not useVolatilityFilter or atr > atrMA * volatilityMultiplier
+
+// Market Regime (ADX)
+[diPlus, diMinus, adx] = ta.dmi(14, 14)
+rangingMarket = not useRegimeFilter or adx < maxADX
+
+// ═══════════════════════════════════════════════════════════════
+// ENTRY CONDITIONS
+// ═══════════════════════════════════════════════════════════════
+// Long: Price touches/crosses below lower band + RSI oversold
+longBBCondition = close <= lowerBand or low < lowerBand
+longRSICondition = rsi < rsiOversold
+longCondition = longBBCondition and longRSICondition and highVolatility and rangingMarket
+
+// Short: Price touches/crosses above upper band + RSI overbought
+shortBBCondition = close >= upperBand or high > upperBand
+shortRSICondition = rsi > rsiOverbought
+shortCondition = shortBBCondition and shortRSICondition and highVolatility and rangingMarket
+
+// ═══════════════════════════════════════════════════════════════
+// POSITION SIZING
+// ═══════════════════════════════════════════════════════════════
+stopLossDistance = close * (stopLossPercent / 100)
+riskAmount = strategy.equity * (riskPercent / 100)
+positionSize = riskAmount / stopLossDistance
+
+// ═══════════════════════════════════════════════════════════════
+// TAKE PROFIT CALCULATION
+// ═══════════════════════════════════════════════════════════════
+calcTakeProfit(entryPrice, isLong) =>
+    if takeProfitMode == "BB_Center"
+        basis  // Exit at Bollinger Band center
+    else if takeProfitMode == "Fixed_RR"
+        stopDistance = entryPrice * stopLossPercent / 100
+        isLong ? entryPrice + (stopDistance * fixedRR) : entryPrice - (stopDistance * fixedRR)
+    else  // Opposite_Band
+        isLong ? upperBand : lowerBand
+
+// ═══════════════════════════════════════════════════════════════
+// STRATEGY EXECUTION
+// ═══════════════════════════════════════════════════════════════
+if (longCondition and strategy.position_size == 0)
+    strategy.entry("Long", strategy.long, qty=positionSize)
+
+if (strategy.position_size > 0)
+    entryPrice = strategy.position_avg_price
+    stopPrice = entryPrice * (1 - stopLossPercent / 100)
+    targetPrice = calcTakeProfit(entryPrice, true)
+    strategy.exit("Exit Long", "Long", stop=stopPrice, limit=targetPrice)
+
+if (shortCondition and strategy.position_size == 0)
+    strategy.entry("Short", strategy.short, qty=positionSize)
+
+if (strategy.position_size < 0)
+    entryPrice = strategy.position_avg_price
+    stopPrice = entryPrice * (1 + stopLossPercent / 100)
+    targetPrice = calcTakeProfit(entryPrice, false)
+    strategy.exit("Exit Short", "Short", stop=stopPrice, limit=targetPrice)
+
+// ═══════════════════════════════════════════════════════════════
+// VISUALIZATION
+// ═══════════════════════════════════════════════════════════════
+// Plot Bollinger Bands
+plot(upperBand, "Upper BB", color=color.new(color.red, 0), linewidth=1)
+plot(basis, "Middle BB", color=color.new(color.gray, 0), linewidth=1, style=plot.style_stepline)
+plot(lowerBand, "Lower BB", color=color.new(color.green, 0), linewidth=1)
+
+// Fill Bollinger Band area
+fillUpper = plot(upperBand, display=display.none)
+fillLower = plot(lowerBand, display=display.none)
+fill(fillUpper, fillLower, color=color.new(color.blue, 95))
+
+// Plot entry signals
+plotshape(longCondition, "Long Signal", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.small)
+plotshape(shortCondition, "Short Signal", shape.triangledown, location.abovebar, color.new(color.red, 0), size=size.small)
+
+// Plot position entry price
+plot(strategy.position_size != 0 ? strategy.position_avg_price : na, "Entry Price", color=color.new(color.yellow, 0), linewidth=2, style=plot.style_linebr)
+
+// RSI overbought/oversold zones (as background)
+bgcolor(rsi > rsiOverbought ? color.new(color.red, 90) : rsi < rsiOversold ? color.new(color.green, 90) : na)

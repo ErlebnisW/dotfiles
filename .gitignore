@@ -1,0 +1,55 @@
+# ===========================================
+# Dotfiles .gitignore
+# Exclude local/machine-specific files
+# ===========================================
+
+# System files
+.DS_Store
+*.log
+*~
+
+# OpenCode exclusions
+opencode/.history/
+opencode/node_modules/
+opencode/bun.lock
+opencode/*.lock
+opencode/.omc/sessions/
+
+# Claude Code exclusions  
+claude/history.jsonl
+claude/debug/
+claude/cache/
+claude/downloads/
+claude/projects/
+claude/ide/
+claude/file-history/
+claude/.session-stats.json
+claude/statsig/
+claude/stats-cache.json
+
+# Claude Code - machine-specific runtime data
+claude/tasks/
+claude/todos/
+claude/transcripts/
+claude/telemetry/
+
+# Claude Code - plugins (installed via marketplace, have their own git repos)
+claude/plugins/marketplaces/
+
+# Embedded git repos in skills (will be cloned fresh on each machine)
+claude/skills/travel-planner/
+opencode/skills/travel-planner/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local settings that shouldn't sync
+# (uncomment if you want machine-specific settings)
+# opencode/settings.local.json
+# claude/settings.local.json

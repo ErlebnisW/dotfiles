@@ -1,0 +1,121 @@
+//@version=5
+strategy("Trend Following Template", overlay=true,
+         initial_capital=10000,
+         default_qty_type=strategy.percent_of_equity,
+         default_qty_value=10,
+         commission_type=strategy.commission.percent,
+         commission_value=0.1,
+         slippage=2)
+
+// ═══════════════════════════════════════════════════════════════
+// INPUTS - Trend Following Parameters
+// ═══════════════════════════════════════════════════════════════
+// Moving Average Settings
+emaFastLength = input.int(12, "Fast EMA Length", minval=5, maxval=50, group="Trend")
+emaSlowLength = input.int(26, "Slow EMA Length", minval=20, maxval=200, group="Trend")
+
+// Momentum Confirmation
+rsiLength = input.int(14, "RSI Length", minval=5, maxval=30, group="Momentum")
+rsiOversold = input.int(40, "RSI Oversold", minval=20, maxval=50, group="Momentum")
+rsiOverbought = input.int(60, "RSI Overbought", minval=50, maxval=80, group="Momentum")
+
+// Volume Filter
+useVolumeFilter = input.bool(true, "Use Volume Filter", group="Filters")
+volumeMultiplier = input.float(1.2, "Volume Multiplier", minval=1.0, maxval=3.0, step=0.1, group="Filters")
+
+// ADX Trend Strength Filter
+useAdxFilter = input.bool(true, "Use ADX Filter", group="Filters")
+adxLength = input.int(14, "ADX Length", minval=7, maxval=30, group="Filters")
+adxThreshold = input.int(25, "ADX Threshold", minval=15, maxval=40, group="Filters")
+
+// Risk Management
+riskPercent = input.float(2.0, "Risk Per Trade (%)", minval=0.5, maxval=10, step=0.5, group="Risk Management")
+stopLossATR = input.float(2.0, "Stop Loss (ATR Multiple)", minval=0.5, maxval=5, step=0.5, group="Risk Management")
+takeProfitRR = input.float(2.5, "Risk:Reward Ratio", minval=1, maxval=5, step=0.5, group="Risk Management")
+useTrailingStop = input.bool(true, "Use Trailing Stop", group="Risk Management")
+trailingPercent = input.float(1.5, "Trailing Stop %", minval=0.5, maxval=5, step=0.5, group="Risk Management")
+
+// ═══════════════════════════════════════════════════════════════
+// INDICATOR CALCULATIONS
+// ═══════════════════════════════════════════════════════════════
+// Trend Indicators
+emaFast = ta.ema(close, emaFastLength)
+emaSlow = ta.ema(close, emaSlowLength)
+
+// Momentum
+rsi = ta.rsi(close, rsiLength)
+
+// Volume
+volumeMA = ta.sma(volume, 20)
+volumeCondition = not useVolumeFilter or volume > volumeMA * volumeMultiplier
+
+// ADX for trend strength
+[diPlus, diMinus, adx] = ta.dmi(adxLength, adxLength)
+adxCondition = not useAdxFilter or adx > adxThreshold
+
+// ATR for position sizing
+atr = ta.atr(14)
+
+// ═══════════════════════════════════════════════════════════════
+// ENTRY CONDITIONS
+// ═══════════════════════════════════════════════════════════════
+// Long: Fast EMA crosses above Slow EMA + RSI confirmation + filters
+longTrend = ta.crossover(emaFast, emaSlow)
+longMomentum = rsi > rsiOversold and rsi < 70
+longCondition = longTrend and longMomentum and volumeCondition and adxCondition
+
+// Short: Fast EMA crosses below Slow EMA + RSI confirmation + filters
+shortTrend = ta.crossunder(emaFast, emaSlow)
+shortMomentum = rsi < rsiOverbought and rsi > 30
+shortCondition = shortTrend and shortMomentum and volumeCondition and adxCondition
+
+// ═══════════════════════════════════════════════════════════════
+// POSITION SIZING
+// ═══════════════════════════════════════════════════════════════
+stopDistance = atr * stopLossATR
+riskAmount = strategy.equity * (riskPercent / 100)
+positionSize = riskAmount / stopDistance
+
+// ═══════════════════════════════════════════════════════════════
+// STRATEGY EXECUTION
+// ═══════════════════════════════════════════════════════════════
+if (longCondition and strategy.position_size == 0)
+    strategy.entry("Long", strategy.long, qty=positionSize)
+    stopPrice = close - stopDistance
+    targetPrice = close + (stopDistance * takeProfitRR)
+
+    if (useTrailingStop)
+        strategy.exit("Exit Long", "Long", stop=stopPrice,
+                     trail_points=targetPrice - close,
+                     trail_offset=close * trailingPercent / 100)
+    else
+        strategy.exit("Exit Long", "Long", stop=stopPrice, limit=targetPrice)
+
+if (shortCondition and strategy.position_size == 0)
+    strategy.entry("Short", strategy.short, qty=positionSize)
+    stopPrice = close + stopDistance
+    targetPrice = close - (stopDistance * takeProfitRR)
+
+    if (useTrailingStop)
+        strategy.exit("Exit Short", "Short", stop=stopPrice,
+                     trail_points=close - targetPrice,
+                     trail_offset=close * trailingPercent / 100)
+    else
+        strategy.exit("Exit Short", "Short", stop=stopPrice, limit=targetPrice)
+
+// ═══════════════════════════════════════════════════════════════
+// VISUALIZATION
+// ═══════════════════════════════════════════════════════════════
+// Plot EMAs
+plot(emaFast, "Fast EMA", color=color.new(color.blue, 0), linewidth=2)
+plot(emaSlow, "Slow EMA", color=color.new(color.red, 0), linewidth=2)
+
+// Plot entry points
+plotshape(longCondition, "Long Signal", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.small)
+plotshape(shortCondition, "Short Signal", shape.triangledown, location.abovebar, color.new(color.red, 0), size=size.small)
+
+// Plot position average price
+plot(strategy.position_size != 0 ? strategy.position_avg_price : na, "Entry Price", color=color.new(color.yellow, 0), linewidth=2, style=plot.style_linebr)
+
+// Background color for trend
+bgcolor(emaFast > emaSlow ? color.new(color.green, 95) : color.new(color.red, 95))

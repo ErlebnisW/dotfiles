@@ -1,0 +1,1 @@
+../skills/travel-planner/commands/travel-planner.md

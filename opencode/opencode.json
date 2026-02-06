@@ -1,0 +1,232 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "opencode-antigravity-auth@latest",
+    "oh-my-opencode@latest"
+  ],
+  "model": "anthropic/claude-opus-4.6",
+  "small_model": "anthropic/claude-opus-4.5",
+  "default_agent": "plan",
+  "provider": {
+    "ZenMux": {
+      "models": {
+        "anthropic/claude-opus-4.6": {
+          "name": "Claude Opus 4.6"
+        },
+      },
+      "options": {
+        "apiKey": "sk-ss-v1-1f33aa9e34feabc1ad1bd3a6bbe15f4e5f89ede7c6b7aa99ccf9d79029cfcfee",
+        "baseURL": "https://zenmux.ai/api/anthropic/v1",
+      }
+    },
+    "AIGO": {
+      "models": {
+        "anthropic/claude-opus-4.6": {
+          "name": "Claude Opus 4.6"
+        },
+        "claude-sonnet-4-5-20250929": {
+          "name": "Claude Sonnet 4.5"
+        }
+      },
+      "options": {
+        "apiKey": "sk-8e8087f7615184aa3da9d19a1bb022b3ba0f39f8e43825c3056886b7d786bad8",
+        "baseURL": "https://api.aigocode.com/api/v1",
+        "timeout": 600000,
+        "setCacheKey": true
+      }
+    },
+    "google": {
+      "name": "Google",
+      "models": {
+        "antigravity-gemini-3-pro": {
+          "name": "Gemini 3 Pro (Antigravity)",
+          "limit": {
+            "context": 1048576,
+            "output": 65535
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "variants": {
+            "low": {
+              "thinkingLevel": "low"
+            },
+            "high": {
+              "thinkingLevel": "high"
+            }
+          }
+        },
+        "antigravity-gemini-3-flash": {
+          "name": "Gemini 3 Flash (Antigravity)",
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "variants": {
+            "minimal": {
+              "thinkingLevel": "minimal"
+            },
+            "low": {
+              "thinkingLevel": "low"
+            },
+            "medium": {
+              "thinkingLevel": "medium"
+            },
+            "high": {
+              "thinkingLevel": "high"
+            }
+          }
+        },
+        "antigravity-claude-sonnet-4-5": {
+          "name": "Claude Sonnet 4.5 (Antigravity)",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "antigravity-claude-sonnet-4-5-thinking": {
+          "name": "Claude Sonnet 4.5 Thinking (Antigravity)",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "variants": {
+            "low": {
+              "thinkingConfig": {
+                "thinkingBudget": 8192
+              }
+            },
+            "max": {
+              "thinkingConfig": {
+                "thinkingBudget": 32768
+              }
+            }
+          }
+        },
+        "antigravity-claude-opus-4-5-thinking": {
+          "name": "Claude Opus 4.5 Thinking (Antigravity)",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "variants": {
+            "low": {
+              "thinkingConfig": {
+                "thinkingBudget": 8192
+              }
+            },
+            "max": {
+              "thinkingConfig": {
+                "thinkingBudget": 32768
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "disabled_providers": [],
+  "username": "Richard",
+  "theme": "catppuccin",
+  "tui": {
+    "scroll_speed": 3,
+    "diff_style": "auto"
+  },
+  "keybinds": {
+    "leader": "ctrl+x",
+    "session_new": "<leader>n"
+  },
+  "share": "manual",
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "autoupdate": true,
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**"
+    ]
+  },
+  "instructions": [
+    "CONTRIBUTING.md"
+  ],
+  "agent": {
+    "code-reviewer": {
+      "description": "code-reviewer agent for reviewing code changes",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "permission": {
+        "edit": "deny"
+      }
+    }
+  },
+  "command": {
+    "test": {
+      "template": "test",
+      "description": "Run tests for the project",
+    }
+  },
+  "formatter": {
+    "prettier": {
+      "disabled": false
+    }
+  },
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    }
+  }
+}

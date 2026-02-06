@@ -1,0 +1,76 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm,algorithmic}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\geometry{margin=1in}
+
+% Custom commands for idea scoring
+\newcommand{\score}[1]{\textbf{#1}/10}
+\newcommand{\topidea}[1]{\colorbox{green!10}{\textbf{#1}}}
+
+\theoremstyle{definition}
+\newtheorem{problem}{Problem}
+\newtheorem{approach}{Approach}
+
+\title{Research Brainstorm: [TITLE]}
+\author{Auto-generated Research Exploration Report}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+[ABSTRACT]
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Problem Formulation}
+
+\begin{problem}
+[FORMAL PROBLEM STATEMENT]
+\end{problem}
+
+\subsection{Current Approach}
+[CURRENT APPROACH DESCRIPTION]
+
+\subsection{Bottleneck}
+[BOTTLENECK ANALYSIS]
+
+\section{Candidate Approaches}
+
+\begin{approach}[Approach Name]
+[MATHEMATICAL FORMULATION]
+\end{approach}
+
+\section{Comparative Analysis}
+
+\begin{table}[h]
+\centering
+\caption{Idea Comparison ($S = 0.25F + 0.30N + 0.25I + 0.20P$)}
+\begin{tabular}{lccccc}
+\toprule
+Idea & Feasibility & Novelty & Impact & Publishability & Composite \\
+\midrule
+[ROWS] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Recommended Approach}
+[RECOMMENDATION]
+
+\section{Suggested Experiments}
+[EXPERIMENTS]
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
