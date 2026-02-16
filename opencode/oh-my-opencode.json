@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
   "agents": {
     "sisyphus": {
-      "model": "zenmux/anthropic/claude-opus-4.5"
+      "model": "zenmux/anthropic/claude-opus-4.6"
     },
     "oracle": {
       "model": "zenmux/openai/gpt-5.2-codex",
@@ -18,11 +18,11 @@
       "model": "zenmux/google/gemini-3-flash-preview"
     },
     "prometheus": {
-      "model": "zenmux/anthropic/claude-opus-4.5",
+      "model": "zenmux/anthropic/claude-opus-4.6",
       "variant": "max"
     },
     "metis": {
-      "model": "zenmux/anthropic/claude-opus-4.5",
+      "model": "zenmux/anthropic/claude-opus-4.6",
       "variant": "max"
     },
     "momus": {
@@ -30,7 +30,7 @@
       "variant": "medium"
     },
     "atlas": {
-      "model": "zenmux/anthropic/claude-opus-4.5"
+      "model": "zenmux/anthropic/claude-opus-4.6"
     }
   },
   "categories": {
