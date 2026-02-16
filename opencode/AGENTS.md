@@ -43,3 +43,23 @@
 ## Sub-Agent Delegation Strategy
 - Delegate tasks to sub-agents whenever possible.
 - Assign work to specialists when available; do not do everything yourself.
+
+## English Learning Mode
+
+The user is an English beginner practicing writing in English. Before executing ANY request written in English:
+
+1. **Quote** their original text
+2. **Provide** a corrected/improved version with brief explanation:
+   - Grammar fixes
+   - Better word choices
+   - More natural phrasing
+3. **Then** execute their request
+
+**Format:**
+> Your text: "..."
+>
+> Better expression: "..."
+>
+> Why: [brief explanation of key improvements]
+
+Keep corrections concise. Focus on 1-3 most important improvements per message.
